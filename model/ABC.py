@@ -1,4 +1,6 @@
 import numpy as np
+from neighbors import *
+from BeeClass import *
 
 seed = 871623
 np.random.seed(seed)
@@ -16,9 +18,12 @@ def f(x):
 """ABC algorithm"""
 
 def solve(f, num_bees = 50, abandonment_criteria = 0.1):
+    #Set this to what we are sorting by ex. price
+    primaryFilter = 1
     # initialize the bees uniformly in the function space
-    population = [np.random.uniform(lower_bound, upper_bound, D) for _ in range(num_bees)]
-    
+    #population = [np.random.uniform(lower_bound, upper_bound, D) for _ in range(num_bees)]
+    population = [Bee(primaryFilter) for _ in range(num_bees)]
+
     # fitness of population at initialization
     fitness = [f(bee) for bee in population]
 
@@ -37,9 +42,11 @@ def solve(f, num_bees = 50, abandonment_criteria = 0.1):
 
             # generate new candidate solution
             # refer 'https://en.wikipedia.org/wiki/Artificial_bee_colony_algorithm' for this formula
-            new_soln = population[i] + np.random.uniform(-1, 1, size=D) * (population[i] - population[random_candidate_idx])
-            
-            new_soln = np.clip(new_soln, lower_bound, upper_bound)
+            #new_soln = population[i] + np.random.uniform(-1, 1, size=D) * (population[i] - population[random_candidate_idx])
+            new_soln = getNeighborFintessBased(population[i])
+
+            # TODO I don't think we need the next line anymore
+            #new_soln = np.clip(new_soln, lower_bound, upper_bound)
             new_fitness = f(new_soln)
 
             # compare fitness with parent
