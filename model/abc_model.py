@@ -1,4 +1,6 @@
 import numpy as np
+from bee_class import Bee, OnlookerBee, EmployedBee, ScoutBee
+import pdb
 
 seed = 871623
 np.random.seed(seed)
@@ -17,73 +19,72 @@ def f(x):
 
 def solve(f, num_bees = 50, abandonment_criteria = 0.1):
     # initialize the bees uniformly in the function space
-    population = [np.random.uniform(lower_bound, upper_bound, D) for _ in range(num_bees)]
-    
+    population = [Bee(np.random.uniform(lower_bound, upper_bound, D), f) for _ in range(num_bees)]
+
     # fitness of population at initialization
-    fitness = [f(bee) for bee in population]
+    for bee in population:
+        bee.update_fitness()
 
-    best_idx = np.argmin(fitness)
-    best_soln = population[best_idx]
-    best_fitness = fitness[best_idx]
-
+    best_idx = np.argmin([bee.fitness for bee in population])
+    best_soln = population[best_idx].position
+    best_fitness = population[best_idx].fitness
+    
     # optimization
     for i in range(MAX_ITER):
         # employed bees
-        for i in range(num_bees):
+        for i, bee in enumerate(population):
+            # employ the bee population
+            bee.__class__ = EmployedBee
 
+            # idx of random neighboring candidate
             random_candidate_idx = np.random.randint(0, num_bees)
             while random_candidate_idx == i:
                 random_candidate_idx = np.random.randint(0, num_bees)
 
             # generate new candidate solution
             # refer 'https://en.wikipedia.org/wiki/Artificial_bee_colony_algorithm' for this formula
-            new_soln = population[i] + np.random.uniform(-1, 1, size=D) * (population[i] - population[random_candidate_idx])
+            neighbor_bee = bee.neighbor(population[random_candidate_idx].position)
+            new_fitness = neighbor_bee.fitness
             
-            new_soln = np.clip(new_soln, lower_bound, upper_bound)
-            new_fitness = f(new_soln)
-
             # compare fitness with parent
-            if new_fitness < fitness[i]:
-                population[i] = new_soln
-                fitness[i] = new_fitness
+            if new_fitness < bee.fitness:
+                population[i] = neighbor_bee
 
         # calculate probabilities
-        fitness_sum = np.sum(fitness)
-        prob = [fitness[idx]/fitness_sum for idx in range(num_bees)]
+        fitness_sum = np.sum([bee.fitness for bee in population])
+        prob = [bee.fitness/fitness_sum for bee in population]
 
         # onlooker bees
-        for i in range(num_bees):
+        for i, bee in enumerate(population):
             if np.random.uniform() < prob[i]:
+                bee.__class__ = OnlookerBee
                 # generate neighborhood source and test its fitness
                 neighborhood_source = np.random.randint(0, num_bees)
                 while neighborhood_source == i:
                     neighborhood_source = np.random.randint(0, num_bees)
 
                 # refer 'https://en.wikipedia.org/wiki/Artificial_bee_colony_algorithm' for this formula
-                new_soln = population[i] + np.random.uniform(-1, 1, size=D) * (population[i] - population[neighborhood_source])
+                neighbor_bee = bee.neighbor(population[neighborhood_source].position)
+                new_fitness = neighbor_bee.fitness
 
-                new_soln = np.clip(new_soln, lower_bound, upper_bound)
-                new_fitness = f(new_soln)
-
-                # recruit onlooker bees to richer sources of food
-                if new_fitness < fitness[i]:
-                    population[i] = new_soln
-                    fitness[i] = new_fitness
+                # recruit onlooker bees to richer sources of food               
+                if new_fitness < bee.fitness:
+                    population[i] = neighbor_bee
 
         # scout bees
         # TODO: incorporate abandonment criteria, right now random sources are abandoned based on a small probability
         # instead, it should track the number of times this source has failed to yield a positive outcome and then 
         # abandon the source if the number of attempts is too large (hyper param)
-        for i in range(num_bees):
+        for i, bee in enumerate(population):
             if np.random.uniform() < abandonment_criteria:
-                population[i] = np.random.uniform(lower_bound, upper_bound, D)
-                fitness[i] = f(population[i])
+                bee.__class__ = ScoutBee
+                population[i] = bee.neighbor()
 
         # update best solutions
-        best_idx = np.argmin(fitness)
-        if fitness[best_idx] < best_fitness:
-            best_soln = population[best_idx]
-            best_fitness = fitness[best_idx]
+        best_idx = np.argmin([bee.fitness for bee in population])
+        if population[best_idx].fitness < best_fitness:
+            best_soln = population[best_idx].position
+            best_fitness = population[best_idx].fitness
 
     return best_soln, best_fitness
 
