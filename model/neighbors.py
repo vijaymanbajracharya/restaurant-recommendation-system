@@ -1,6 +1,7 @@
 import numpy as np
 import random
-from ABC import f
+from abc_model_discrete import f
+from bee_class import *
 
 # The number of times we can go out from the center. For example if the max_std is 3 and the std is 2
 # and I am looking at price, where my current price is 50 I will accept anything between 56 and 44.
@@ -42,12 +43,12 @@ def getNeighbor(bee):
     neighbor = None
     distanceCount = 1
     # Get the current restaurant data.
-    current = arrays[bee.currentIndex]
+    current = arrays[bee.position]
     # Loop for number of indexes from the current e.g. plus or minus the max_distance from the current index.
     while distanceCount <= max_distance and neighbor is None:
         # Keeps the indexes in bounds. I assume we don't want this to wrap.
-        index1 = arrays[bee.currentIndex + (1 * distanceCount)] if bee.currentIndex < sizeOfData else None
-        index2 = arrays[bee.currentIndex - (1 * distanceCount)] if bee.currentIndex > 0 else None
+        index1 = arrays[bee.position + (1 * distanceCount)] if bee.position < sizeOfData else None
+        index2 = arrays[bee.position - (1 * distanceCount)] if bee.position > 0 else None
 
         # Prevent repeat visits of restaurants.
         if index1 in bee.visitedIndexes: index1 = None
@@ -73,7 +74,7 @@ def getNeighbor(bee):
 Gets a single neighbor for the current bee, gets the best fit neighbor if two are returned.
 @param: index: The index of the current bee.
 @param: dataBaseIndex: The index of the chosen field in the database (e.g. price, location etc..)
-Returns: The neighbor if there is one and None otherwise
+Returns: The neighbor index if there is one and None otherwise
 '''
 
 
@@ -81,12 +82,12 @@ def getNeighborFintessBased(bee):
     neighbor = None
     distanceCount = 1
     # Get the current restaurant data.
-    current = arrays[bee.currentIndex]
+    current = arrays[bee.position]
     # Loop for number of indexes from the current e.g. plus or minus the max_distance from the current index.
     while distanceCount <= max_distance and neighbor is None:
         # Keeps the indexes in bounds. I assume we don't want this to wrap.
-        index1 = arrays[bee.currentIndex + (1 * distanceCount)] if bee.currentIndex < sizeOfData else None
-        index2 = arrays[bee.currentIndex - (1 * distanceCount)] if bee.currentIndex > 0 else None
+        index1 = arrays[bee.position + (1 * distanceCount)] if bee.position < sizeOfData else None
+        index2 = arrays[bee.position - (1 * distanceCount)] if bee.position > 0 else None
 
         # Prevent repeat visits of restaurants.
         if index1 in bee.visitedIndexes: index1 = None
@@ -99,7 +100,7 @@ def getNeighborFintessBased(bee):
             neighbor2 = None
             if index1:
                 if current[bee.primaryFilter] <= index1[bee.primaryFilter] <= current[bee.primaryFilter] + \
-                        (std * stdCount) or current[bee.primaryFilterx] >= index1[bee.primaryFilter] >= \
+                        (std * stdCount) or current[bee.primaryFilter] >= index1[bee.primaryFilter] >= \
                         current[bee.primaryFilter] - (std * stdCount): neighbor1 = index1
             if index2:
                 if current[bee.primaryFilter] <= index2[bee.primaryFilter] <= current[bee.primaryFilter] + \
