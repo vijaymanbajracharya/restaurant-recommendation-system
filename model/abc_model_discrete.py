@@ -72,7 +72,7 @@ def solve(f, num_bees = 50, abandonment_criteria = 0.1):
                 sorted_population = sorted(population, key=lambda x: euclidean_distance(bee, x))
 
                 # The first in the population will most likely be the same bee as the current bee so take the second.
-                neighbor_bee = sorted_population[1] if bee == sorted_population[0] else neighbor_bee = sorted_population[0]
+                neighbor_bee = sorted_population[1] if bee == sorted_population[0] else sorted_population[0]
                 new_fitness = neighbor_bee.fitness
 
                 # recruit onlooker bees to richer sources of food               

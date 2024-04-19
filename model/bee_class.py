@@ -5,7 +5,7 @@ lower_bound = -2.0
 upper_bound = 2.0
 
 class Bee():
-    def __init__(self, position, f, primaryFilter) -> None:
+    def __init__(self, position, f, primaryFilter=0) -> None:
         self.position = position
         self.objective_func = f
         self.fitness = 0
