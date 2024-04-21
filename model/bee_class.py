@@ -5,12 +5,14 @@ lower_bound = -2.0
 upper_bound = 2.0
 
 class Bee():
-    def __init__(self, position, f, primaryFilter=0) -> None:
+    def __init__(self, position, f, idx=0, primaryFilter=0, name=None) -> None:
+        self.name = name
         self.position = position
         self.objective_func = f
         self.fitness = 0
         self.visitedIndexes = [self.position]
         self.primaryFilter = primaryFilter
+        self.idx = idx
     
     def update_position(self, new_position):
         self.position = new_position

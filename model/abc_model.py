@@ -18,6 +18,7 @@ def f(x):
 """ABC algorithm"""
 
 def solve(f, num_bees = 50, abandonment_criteria = 0.1):
+    pdb.set_trace()
     # initialize the bees uniformly in the function space
     population = [Bee(np.random.uniform(lower_bound, upper_bound, D), f) for _ in range(num_bees)]
 
