@@ -37,11 +37,12 @@ class neighbors:
             array.extend([np.random.randint(1, 101) for _ in range(3)])
             data.append(array)
 
+        sorted_data = sorted(data, key=lambda x: x[1])
         # Print the generated arrays
-        for array in data:
+        for array in sorted_data:
             print(array)
 
-        return data
+        return sorted_data
 
 
     """
@@ -97,33 +98,39 @@ class neighbors:
         # Loop for number of indexes from the current e.g. plus or minus the max_distance from the current index.
         while distanceCount <= max_distance and neighbor is None:
             # Keeps the indexes in bounds. I assume we don't want this to wrap.
-            index1 = data[current_idx + (1 * distanceCount)] if current_idx < sizeOfData - 1 else None
-            index2 = data[current_idx - (1 * distanceCount)] if current_idx > 0 else None
+            index1 = current_idx + (1 * distanceCount) if current_idx < sizeOfData - 1 else None
+            index2 = current_idx - (1 * distanceCount) if current_idx > 0 else None
+            restaurant1 = data[index1]
+            restaurant2 = data[index2]
 
             # Prevent repeat visits of restaurants.
             # TODO: FIX ME, elementwise comparision 
-            # if index1[1:] in bee.visitedIndexes: index1 = None
-            # if index2[1:] in bee.visitedIndexes: index2 = None
+            if index1 in bee.visitedIndexes: index1 = None
+            if index2 in bee.visitedIndexes: index2 = None
 
-            stdCount = 0
+            stdCount = 1
             # Loop for the number of standard deviations from the current data.
             while neighbor is None and stdCount is not max_std:
-                neighbor1 = None
-                neighbor2 = None
+                neighborIndex1 = None
+                neighborIndex2 = None
                 if index1:
-                    if current[1:][bee.primaryFilter] <= index1[1:][bee.primaryFilter] <= current[1:][bee.primaryFilter] + \
-                            (std * stdCount) or current[1:][bee.primaryFilter] >= index1[1:][bee.primaryFilter] >= \
-                            current[1:][bee.primaryFilter] - (std * stdCount): neighbor1 = index1
+                    if current[bee.primaryFilter] <= restaurant1[bee.primaryFilter] <= current[bee.primaryFilter] + \
+                            (std * stdCount) or current[bee.primaryFilter] >= restaurant1[bee.primaryFilter] >= \
+                            current[bee.primaryFilter] - (std * stdCount): neighborIndex1 = index1
                 if index2:
-                    if current[1:][bee.primaryFilter] <= index2[1:][bee.primaryFilter] <= current[1:][bee.primaryFilter] + \
-                            (std * stdCount) or current[1:][bee.primaryFilter] >= index2[1:][bee.primaryFilter] >= \
-                            current[1:][bee.primaryFilter] - (std * stdCount): neighbor2 = index2
+                    if current[bee.primaryFilter] <= restaurant2[bee.primaryFilter] <= current[bee.primaryFilter] + \
+                            (std * stdCount) or current[bee.primaryFilter] >= restaurant2[bee.primaryFilter] >= \
+                            current[bee.primaryFilter] - (std * stdCount): neighborIndex2 = index2
 
-                if neighbor1 and neighbor2:
+                if neighborIndex1 and neighborIndex2:
                     # Passes the index to the fitness function
-                    fitness1 = f(neighbor1)
-                    fitness2 = f(neighbor2)
-                    neighbor = neighbor1 if fitness1 > fitness2 else neighbor2
+                    fitness1 = f(restaurant1[1:])
+                    fitness2 = f(restaurant2[1:])
+                    neighbor = neighborIndex1 if fitness1 > fitness2 else neighborIndex2
+                elif neighborIndex1:
+                    neighbor = neighborIndex1
+                elif neighborIndex2:
+                    neighbor = neighborIndex2
 
                 stdCount += 1
 
@@ -165,7 +172,7 @@ def f(x):
 def solve(f, num_bees = 5, abandonment_criteria = 0.1):
     # initialize the bees uniformly in the function space
     #TODO change this to match user input
-    primaryFilter = 0
+    primaryFilter = 1
 
     # select a random subset to begin with
     random_subset = random.sample(range(len(SOLUTION_SPACE)), num_bees)
@@ -192,12 +199,19 @@ def solve(f, num_bees = 5, abandonment_criteria = 0.1):
             while random_candidate_idx == i:
                 random_candidate_idx = np.random.randint(0, num_bees)
 
-            neighbor_index = neighbors.getNeighborEuclidean(bee, SOLUTION_SPACE)
-            new_fitness = f(neighbor_index)
-            
-            # compare fitness with parent
-            if new_fitness < bee.fitness:
-                bee.position = neighbor_index
+            neighbor_index = neighbors.getNeighborFintessBased(bee, SOLUTION_SPACE)
+            if neighbor_index:
+                neighbor_restaurant = SOLUTION_SPACE[neighbor_index]
+                neighbor_name = neighbor_restaurant[0]
+                neighbor_position = neighbor_restaurant[1:]
+                new_fitness = f(neighbor_position)
+
+                # compare fitness with parent
+                if new_fitness < bee.fitness:
+                    bee.position = neighbor_position
+                    bee.visitedIndexes.append(neighbor_index)
+                    bee.fitness = new_fitness
+                    bee.name = neighbor_name
 
         # calculate probabilities
         fitness_sum = np.sum([bee.fitness for bee in population])
@@ -214,7 +228,7 @@ def solve(f, num_bees = 5, abandonment_criteria = 0.1):
 
                 def euclidean_distance(other):
                     other_pos = other.position
-                    return np.linalg.norm(other_pos - bee.position)
+                    return np.linalg.norm(other_pos[primaryFilter-1] - bee.position[primaryFilter-1])
 
                 #sorts the population based on the distance from the current bee.position.
                 sorted_population = sorted(population, key=euclidean_distance)

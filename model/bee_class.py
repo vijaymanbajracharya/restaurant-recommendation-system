@@ -10,9 +10,9 @@ class Bee():
         self.position = position
         self.objective_func = f
         self.fitness = 0
-        self.visitedIndexes = [self.position]
         self.primaryFilter = primaryFilter
         self.idx = idx
+        self.visitedIndexes = [self.idx]
     
     def update_position(self, new_position):
         self.position = new_position
