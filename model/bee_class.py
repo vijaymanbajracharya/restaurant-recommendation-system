@@ -17,7 +17,7 @@ class Bee():
     def update_position(self, new_position):
         self.position = new_position
 
-     def update_fitness(self):
+    def update_fitness(self):
         self.fitness = (self.position[0]*0.2+(100-self.position[1])*0.2+self.position[2]*0.2+self.position[3]*0.1+(100-self.position[4])*0.1+self.position[5]*0.1+self.position[6]*0.1)/100
 
     def display(self):
