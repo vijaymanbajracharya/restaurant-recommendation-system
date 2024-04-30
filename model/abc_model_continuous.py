@@ -65,6 +65,7 @@ def solve(f, num_bees = 50, abandonment_criteria = 0.1):
 
                 # refer 'https://en.wikipedia.org/wiki/Artificial_bee_colony_algorithm' for this formula
                 neighbor_bee = bee.neighbor(population[neighborhood_source].position)
+
                 new_fitness = neighbor_bee.fitness
 
                 # recruit onlooker bees to richer sources of food               

@@ -250,11 +250,10 @@ def solve(f, cuisine, num_bees=5, abandonment_limit=10):
                 # The first in the population will most likely be the same bee as the current bee so take the second.
                 neighbor_bee = sorted_population[1] if bee == sorted_population[0] else sorted_population[0]
 
-                if neighbor_bee not in population:
-                    # TODO: related to the TODO above, this line never gets triggered meaning
-                    #       a new food source is never assigned to the employed bees
-                    #       neighbor_bee is always present in population
-                    pdb.set_trace()
+                # TODO: generate a new food source similar to employed but slightly different. if the new food source fitness (rather than the neighbor fitness) is
+                # higher, then we accept new solution, otherwise we increment nonImprovementCounter.
+
+                # TODO: we dont wanna filter by fitness every time
 
                 new_fitness = neighbor_bee.fitness
 
@@ -267,6 +266,7 @@ def solve(f, cuisine, num_bees=5, abandonment_limit=10):
         # scout bees
         for i, bee in enumerate(population):
             if bee.nonImprovementCounter >= abandonment_limit:
+                # TODO: maybe dont abandon strictly based on abandonment limit but have some heuristic based on fitness
                 mask = ~np.all(SOLUTION_SPACE[:, 1:] == bee.position, axis=1)
                 valid_food_sources = SOLUTION_SPACE[mask]
                 new_source_idx = np.random.randint(0, valid_food_sources.shape[0])
