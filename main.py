@@ -1,5 +1,5 @@
 from data.load import load
-from model.abc_model import solve
+from model.abc_model_continuous import solve
 
 def main():
     """The main entrypoint"""
