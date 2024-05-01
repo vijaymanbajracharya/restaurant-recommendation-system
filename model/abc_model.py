@@ -26,6 +26,9 @@ max_distance = 10
 # How many rows we have in the database.
 sizeOfData = 100
 
+# total number of neighbors to look at during onlooker phase (leave as even number)
+max_onlooker_distance = 10
+
 class neighbors:
     def generateData(cuisine):
         cuisine = [c.strip().lower() for c in cuisine]
@@ -52,8 +55,6 @@ class neighbors:
     '''
 
     def getNeighborFintessBased(bee, data):
-        count = 0
-        # print(data)
         neighbor = None
         distanceCount = 1
         restaurant1, restaurant2 = None, None
@@ -72,13 +73,6 @@ class neighbors:
             # Prevent repeat visits of restaurants.
             if index1 in bee.visitedIndexes: index1 = None
             if index2 in bee.visitedIndexes: index2 = None
-            # print("bee", bee)
-            # print("primary filter", bee.primaryFilter)
-            # print("current[0]", current[0])
-            # print("current[1]", current[1])
-            # print("current", current[bee.primaryFilter])
-            # print("restaurant1", restaurant1[bee.primaryFilter])
-            # print("restaurant2", restaurant2[bee.primaryFilter])
             stdCount = 1
             # Loop for the number of standard deviations from the current data.
             while neighbor is None and stdCount is not max_std:
@@ -94,9 +88,6 @@ class neighbors:
                     if current[bee.primaryFilter] <= restaurant2[bee.primaryFilter] <= current[bee.primaryFilter] + \
                             (std * stdCount) or current[bee.primaryFilter] >= restaurant2[bee.primaryFilter] >= \
                             current[bee.primaryFilter] - (std * stdCount): neighborIndex2 = index2
-                # print(restaurant1,restaurant2,current)
-                # print(current[1])
-                # print(neighborIndex1,neighborIndex2)
                 # if index1:
                 #     for x in range(1,4):
                 #         if index1+x<len(data) and ( current[-1]-4 <=data[index1+x][-1]<=current[-1]+4):
@@ -149,6 +140,35 @@ class neighbors:
             # Get the closest list
             closest_list = data[closest_index]
             return closest_list
+
+
+    """
+    Returns the best neighbor based on fitness that is half of max_onlooker_distance up or down from the current index.
+    """
+    def getOnlookerNeighbor(bee, data):
+        neighbors = []
+        # Get the current restaurant data.
+        current_idx = bee.idx
+        distance = max_onlooker_distance / 2
+        for i in range(int(distance)):
+            # make sure the index is in range
+            if current_idx + (i + 1) < len(data):
+                indexUp = current_idx + (i + 1)
+                #structured as [index, reastaurant data]
+                neighbors.append([indexUp, data[indexUp]])
+            if current_idx - (i + 1) >= 0:
+                indexDown = current_idx - (i + 1)
+                # structured as [index, reastaurant data]
+                neighbors.append([indexDown, data[indexDown]])
+
+        # Sort the array based on the position of each restauraunt.
+        def sort(other):
+            return f(other[1][1:])
+
+        sortedNeighbors = sorted(neighbors, key=sort)
+        #return the index, and the best restauruant neighbor
+        return sortedNeighbors[0][0], sortedNeighbors[0][1]
+
 
 
 # TODO: This needs to be the same size as x
@@ -240,22 +260,35 @@ def solve(f, cuisine, num_bees=5, abandonment_limit=10):
                 while neighborhood_source == i:
                     neighborhood_source = np.random.randint(0, num_bees)
 
-                def euclidean_distance(other):
-                    other_pos = other.position
-                    return np.linalg.norm(other_pos[primaryFilter - 1] - bee.position[primaryFilter - 1])
+                # TODO: remove after new implementation working
+                # def euclidean_distance(other):
+                #     other_pos = other.position
+                #     return np.linalg.norm(other_pos[primaryFilter - 1] - bee.position[primaryFilter - 1])
+                #
+                # # sorts the population based on the distance from the current bee.position.
+                # sorted_population = sorted(population, key=euclidean_distance)
+                #
+                # # The first in the population will most likely be the same bee as the current bee so take the second.
+                # neighbor_bee = sorted_population[1] if bee == sorted_population[0] else sorted_population[0]
 
-                # sorts the population based on the distance from the current bee.position.
-                sorted_population = sorted(population, key=euclidean_distance)
-
-                # The first in the population will most likely be the same bee as the current bee so take the second.
-                neighbor_bee = sorted_population[1] if bee == sorted_population[0] else sorted_population[0]
-
-                # TODO: generate a new food source similar to employed but slightly different. if the new food source fitness (rather than the neighbor fitness) is
+                # generate a new food source similar to employed but slightly different. if the new food source fitness (rather than the neighbor fitness) is
                 # higher, then we accept new solution, otherwise we increment nonImprovementCounter.
+                potential_index, potential_neighbor = neighbors.getOnlookerNeighbor(bee, SOLUTION_SPACE)
 
-                # TODO: we dont wanna filter by fitness every time
+                #checks if the new neighbor is in the population
+                def in_population(potential, population):
+                    for bee in population:
+                        if bee.name == potential[0]:
+                            return True
+                    return False
 
-                new_fitness = neighbor_bee.fitness
+                #if it isn't in the population create a new bee.
+                if not in_population(potential_neighbor, population):
+                    neighbor_bee = Bee(potential_neighbor[1:], f, potential_index, primaryFilter,potential_neighbor[0])
+                    new_fitness = neighbor_bee.fitness
+                else:
+                    neighbor_bee = None
+                    new_fitness = 0
 
                 # recruit onlooker bees to richer sources of food               
                 if new_fitness > bee.fitness:
