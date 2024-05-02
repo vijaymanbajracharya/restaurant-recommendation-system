@@ -59,7 +59,7 @@ def rosenbrock(x):  # returns a scalar
 
 """ABC algorithm"""
 
-def solve(f, num_bees = 50, abandonment_criteria = 0.1):
+def solve(f, num_bees = 50, abandonment_limit=25):
     # initialize the bees uniformly in the function space
     #Need to pass primary filter and idx even though they won't be used
     population = [Bee(np.random.uniform(lower_bound, upper_bound, D), f, 0, 0, "name") for _ in range(num_bees)]
@@ -92,6 +92,8 @@ def solve(f, num_bees = 50, abandonment_criteria = 0.1):
             # compare fitness with parent
             if new_fitness < bee.fitness:
                 population[i] = neighbor_bee
+            else:
+                bee.nonImprovementCounter += 1
 
         # calculate probabilities
         fitness_sum = np.sum([bee.fitness for bee in population])
@@ -114,15 +116,18 @@ def solve(f, num_bees = 50, abandonment_criteria = 0.1):
                 # recruit onlooker bees to richer sources of food               
                 if new_fitness < bee.fitness:
                     population[i] = neighbor_bee
+                else:
+                    bee.nonImprovementCounter += 1
 
         # scout bees
         # TODO: incorporate abandonment criteria, right now random sources are abandoned based on a small probability
         # instead, it should track the number of times this source has failed to yield a positive outcome and then 
         # abandon the source if the number of attempts is too large (hyper param)
         for i, bee in enumerate(population):
-            if np.random.uniform() < abandonment_criteria:
+            if bee.nonImprovementCounter >= abandonment_limit:
                 bee.__class__ = ScoutBee
                 population[i] = bee.neighbor()
+                bee.nonImprovementCounter = 0
 
         # update best solutions
         best_idx = np.argmin([bee.fitness for bee in population])
