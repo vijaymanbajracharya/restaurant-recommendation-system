@@ -137,19 +137,33 @@ def solve(f, num_bees = 50, abandonment_limit=25):
 
     return best_soln, best_fitness
 
-def solve_Init(obj_func):
-    number_of_trials = 3
+def solve_Init(obj_func, pop_size, number_of_trials, abandoment_limit):
     best_fitnesses = [0] * number_of_trials
     for i in range(number_of_trials):
-        best_solution, best_fitness = solve(obj_func)
+        best_solution, best_fitness = solve(obj_func, pop_size, abandoment_limit)
         best_fitnesses[i] = best_fitness
         
     mean = np.mean(best_fitnesses)
     sample_std_dev = np.std(best_fitnesses, ddof=1)
     return mean, sample_std_dev
 
-mean, std = solve_Init(f)
-print("Mean: ", mean)
-print("Standard Deviation: ", std)
+population_sizes = [100, 50, 30, 10]
+number_of_trials = 30
+abandoment_limits = [50, 25, 10, 5, 1, 0.1]
+
+with open('../continousOutput.txt', 'w') as file:
+    for i in range(len(population_sizes)):
+        for j in range(len(abandoment_limits)):
+            mean, std = solve_Init(rosenbrock, population_sizes[i], number_of_trials, abandoment_limits[j])
+            file.write("Population Size: " + str(population_sizes[i]) + '\n')
+            print("Population Size: ", population_sizes[i])
+            file.write("Abandoment Limit: " + str(abandoment_limits[j]) + '\n')
+            print("Abandoment Limit: ", abandoment_limits[j])
+            file.write("Mean: " + str(mean) + '\n')
+            print("Mean: ", mean)
+            file.write("Standard Deviation: " + str(std) + '\n\n')
+            print("Standard Deviation: ", std)
+
+
 # print(solve(f))
 
