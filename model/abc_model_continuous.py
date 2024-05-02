@@ -132,18 +132,18 @@ def solve(f, num_bees = 50, abandonment_criteria = 0.1):
 
     return best_soln, best_fitness
 
-def solve_Init():
-    number_of_trials = 30
+def solve_Init(obj_func):
+    number_of_trials = 3
     best_fitnesses = [0] * number_of_trials
     for i in range(number_of_trials):
-        best_solution, best_fitness = solve(f)
+        best_solution, best_fitness = solve(obj_func)
         best_fitnesses[i] = best_fitness
         
     mean = np.mean(best_fitnesses)
     sample_std_dev = np.std(best_fitnesses, ddof=1)
-    return mean, smaple_std_dev
+    return mean, sample_std_dev
 
-mean, std = solve_Init()
+mean, std = solve_Init(f)
 print("Mean: ", mean)
 print("Standard Deviation: ", std)
 # print(solve(f))

@@ -28,7 +28,7 @@ class Bee():
     def _neighbor(self, other_position):
         neighbor = self.position + np.random.uniform(-1, 1, size=len(self.position)) * (self.position - other_position)
         neighbor = np.clip(neighbor, lower_bound, upper_bound)
-        neighbor = Bee(neighbor, self.objective_func)
+        neighbor = Bee(neighbor, self.objective_func, 0, 0, "name")
         neighbor.update_fitness()
         return neighbor
         
@@ -50,7 +50,7 @@ class OnlookerBee(Bee):
 
 class ScoutBee(Bee):
     def neighbor(self):
-        neighbor = Bee(np.random.uniform(lower_bound, upper_bound, size=len(self.position)), self.objective_func)
+        neighbor = Bee(np.random.uniform(lower_bound, upper_bound, size=len(self.position)), self.objective_func, 0, 0, "name")
         neighbor.update_fitness()
         return neighbor
 
