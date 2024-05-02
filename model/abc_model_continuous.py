@@ -15,11 +15,54 @@ D = 2
 def f(x): 
     return np.sum(100.0*(x[1:]-x[:-1]**2.0)**2.0 + (1-x[:-1])**2.0)
 
+def eggcrate(x):  # returns a scalar
+    """
+    The objective function.
+    Implements the Eggcrate Function.
+    :param x: The 1xD array to calculate with.
+    :return: The cost of the point x.
+    """
+    x = x[0]
+    return pow(x[0], 2) + pow(x[1], 2) + 25 * (pow(math.sin(x[0]), 2) + pow(math.sin(x[1]), 2))
+
+def fourPeaks(x):  # returns a scalar
+    """
+    The objective function.
+    Implements the Four Peaks Function .
+    :param x: The 1xD array to calculate with.
+    :return: The cost of the point x.
+    """
+    x = x[0]
+    return math.exp(-pow((x[0] - 4), 2) - pow((x[1] - 4), 2)) + math.exp(-pow((x[0] + 4), 2) - pow((x[1] - 4), 2)) + \
+        2 * (math.exp(-pow(x[0], 2) - pow(x[1], 2)) + math.exp(-pow(x[0], 2) - pow((x[1] + 4), 2)))
+
+def easom(x): # returns a scalar
+    """
+    The objective function.
+    Implements the Easom algorithm.
+    :param x: The 1xD array to calculate with.
+    :return: The cost of the point x.
+    """
+    return -np.cos(x[0]) * np.cos(x[1]) * np.exp(-((x[0] - np.pi)**2) - ((x[1] - np.pi)**2))
+
+def rosenbrock(x):  # returns a scalar
+    """
+        The objective function.
+        Implements the Rosenbrock algorithm.
+        :param x: The 1xD array to calculate with.
+        :return: The cost of the point x.
+        """
+    sum = 0
+    for k in range(D - 1):
+        sum += pow(x[0] - 1, 2) + 100 * pow((float(x[1]) - pow(x[0], 2)), 2)
+    return sum
+
 """ABC algorithm"""
 
 def solve(f, num_bees = 50, abandonment_criteria = 0.1):
     # initialize the bees uniformly in the function space
-    population = [Bee(np.random.uniform(lower_bound, upper_bound, D), f) for _ in range(num_bees)]
+    #Need to pass primary filter and idx even though they won't be used
+    population = [Bee(np.random.uniform(lower_bound, upper_bound, D), f, 0, 0, "name") for _ in range(num_bees)]
 
     # fitness of population at initialization
     for bee in population:
@@ -89,4 +132,19 @@ def solve(f, num_bees = 50, abandonment_criteria = 0.1):
 
     return best_soln, best_fitness
 
-print(solve(f))
+def solve_Init():
+    number_of_trials = 30
+    best_fitnesses = [0] * number_of_trials
+    for i in range(number_of_trials):
+        best_solution, best_fitness = solve(f)
+        best_fitnesses[i] = best_fitness
+        
+    mean = np.mean(best_fitnesses)
+    sample_std_dev = np.std(best_fitnesses, ddof=1)
+    return mean, smaple_std_dev
+
+mean, std = solve_Init()
+print("Mean: ", mean)
+print("Standard Deviation: ", std)
+# print(solve(f))
+
