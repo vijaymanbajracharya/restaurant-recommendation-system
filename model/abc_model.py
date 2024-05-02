@@ -29,6 +29,9 @@ sizeOfData = 100
 # total number of neighbors to look at during onlooker phase (leave as even number)
 max_onlooker_distance = 10
 
+USER_INPUT = []
+
+
 class neighbors:
     def generateData(cuisine):
         cuisine = [c.strip().lower() for c in cuisine]
@@ -141,10 +144,10 @@ class neighbors:
             closest_list = data[closest_index]
             return closest_list
 
-
     """
     Returns the best neighbor based on fitness that is half of max_onlooker_distance up or down from the current index.
     """
+
     def getOnlookerNeighbor(bee, data):
         neighbors = []
         # Get the current restaurant data.
@@ -154,7 +157,7 @@ class neighbors:
             # make sure the index is in range
             if current_idx + (i + 1) < len(data):
                 indexUp = current_idx + (i + 1)
-                #structured as [index, reastaurant data]
+                # structured as [index, reastaurant data]
                 neighbors.append([indexUp, data[indexUp]])
             if current_idx - (i + 1) >= 0:
                 indexDown = current_idx - (i + 1)
@@ -166,9 +169,8 @@ class neighbors:
             return f(other[1][1:])
 
         sortedNeighbors = sorted(neighbors, key=sort)
-        #return the index, and the best restauruant neighbor
+        # return the index, and the best restauruant neighbor
         return sortedNeighbors[0][0], sortedNeighbors[0][1]
-
 
 
 # TODO: This needs to be the same size as x
@@ -177,21 +179,22 @@ COEFFICIENTS = [0.2, 0.2, 0.2, 0.1, 0.1, 0.1, 0.1]
 
 # objective function linear combination of all features
 #	Price	Distance	Cleanliness and Hygiene	Locality/Neighborhood	Wait Times	Portion Sizes	Overall Rating
+#Divide the input by 10 so it goes from 0-1
 
 def f(x):
-    return (x[0] * 0.2 + (100 - x[1]) * 0.2 + x[2] * 0.2 + x[3] * 0.1 + (100 - x[4]) * 0.1 + x[5] * 0.1 + x[6] * 0.1) / 100
+    return (x[0] * (USER_INPUT[0]/10) + x[1] * (USER_INPUT[1]/10) + x[2] *(USER_INPUT[2]/10) + x[3] * (USER_INPUT[3]/10)
+            + x[4] * (USER_INPUT[4]/10) + x[5] * (USER_INPUT[5]/10) + x[6] * (USER_INPUT[6]/10)) / 100
 
 
 """ABC algorithm"""
 
 
-def solve(f, cuisine, num_bees=5, abandonment_limit=10):
+def solve(f, cuisine, primary_filter, num_bees=5, abandonment_limit=10):
     SOLUTION_SPACE = neighbors.generateData(cuisine)
     SOLUTION_SPACE = SOLUTION_SPACE.to_numpy()
     # initialize the bees uniformly in the function space
-    # TODO change this to match user input
-    primaryFilter = 1
     population = []
+    primaryFilter = primary_filter
     # select a random subset to begin with
     random_subset = random.sample(range(len(SOLUTION_SPACE)), num_bees)
     # print(random_subset)
@@ -200,11 +203,11 @@ def solve(f, cuisine, num_bees=5, abandonment_limit=10):
         row = SOLUTION_SPACE[idx]
         name = row[0]
         data = np.array(row[1:])
-        primaryFilter = 1
+        primaryFilter = primary_filter
         # Create a new Bee instance
         new_bee = Bee(data, f, idx, primaryFilter, name)
         population.append(new_bee)
-    
+
     # fitness of population at initialization
     for bee in population:
         bee.update_fitness()
@@ -222,8 +225,8 @@ def solve(f, cuisine, num_bees=5, abandonment_limit=10):
             # idx of random neighboring candidate
             random_candidate_idx = np.random.randint(0, num_bees)
             while random_candidate_idx == i:
-                random_candidate_idx = np.random.randint(0, num_bees)\
-            
+                random_candidate_idx = np.random.randint(0, num_bees)
+
             neighbor_index = neighbors.getNeighborFintessBased(bee, SOLUTION_SPACE)
             if neighbor_index:
                 neighbor_restaurant = SOLUTION_SPACE[neighbor_index]
@@ -275,16 +278,16 @@ def solve(f, cuisine, num_bees=5, abandonment_limit=10):
                 # higher, then we accept new solution, otherwise we increment nonImprovementCounter.
                 potential_index, potential_neighbor = neighbors.getOnlookerNeighbor(bee, SOLUTION_SPACE)
 
-                #checks if the new neighbor is in the population
+                # checks if the new neighbor is in the population
                 def in_population(potential, population):
                     for bee in population:
                         if bee.name == potential[0]:
                             return True
                     return False
 
-                #if it isn't in the population create a new bee.
+                # if it isn't in the population create a new bee.
                 if not in_population(potential_neighbor, population):
-                    neighbor_bee = Bee(potential_neighbor[1:], f, potential_index, primaryFilter,potential_neighbor[0])
+                    neighbor_bee = Bee(potential_neighbor[1:], f, potential_index, primaryFilter, potential_neighbor[0])
                     new_fitness = neighbor_bee.fitness
                 else:
                     neighbor_bee = None
@@ -303,7 +306,8 @@ def solve(f, cuisine, num_bees=5, abandonment_limit=10):
                 mask = ~np.all(SOLUTION_SPACE[:, 1:] == bee.position, axis=1)
                 valid_food_sources = SOLUTION_SPACE[mask]
                 new_source_idx = np.random.randint(0, valid_food_sources.shape[0])
-                population[i] = Bee(np.array(SOLUTION_SPACE[new_source_idx][1:]), f, new_source_idx, primaryFilter, SOLUTION_SPACE[new_source_idx][0])
+                population[i] = Bee(np.array(SOLUTION_SPACE[new_source_idx][1:]), f, new_source_idx, primaryFilter,
+                                    SOLUTION_SPACE[new_source_idx][0])
                 population[i].update_fitness()
 
         # update best solutions
@@ -313,14 +317,56 @@ def solve(f, cuisine, num_bees=5, abandonment_limit=10):
 
     return population[best_idx].name
 
+#Finds the largest rating and returns the index
+def findPrimaryFilter(valid_preferences):
+    if not valid_preferences:
+        return None # empty array
+    max_index = 0
+    for i in range(1, len(valid_preferences)):
+        if valid_preferences[i] > valid_preferences[max_index]:
+            max_index = i
+    return max_index
 
 # print(solve(f))
 def main():
     li = []
     cuisine = input("Enter preferred cuisines separated by comma (e.g., Indian,Chinese): ").split(',')
 
+    valid_preferences = []
+    success = False
+    while not success:
+        print("Choose your preferences on a scale from 1-10 (inclusive).")
+        print(
+            "The order of your preferences are: Price	Distance	Cleanliness and Hygiene	Locality/Neighborhood	Wait Times	Portion Sizes	Overall Rating")
+        preferences = input("Enter a comma seperated list of 7 values: ").split(',')
+        valid = True
+        valid_preferences = []
+        for value in preferences:
+            try:
+                if valid:
+                    int_value = int(value) #Makes sure the input is an int
+                    if 10 >= int_value > 0: #Makes sure value is between 1 and 10 inclusive
+                        valid_preferences.append(int_value)
+                    else:
+                        print(f"Value {int_value} is not between 1 and 10. Try again.")
+                        valid = False
+
+            except ValueError:
+                print(f"Invalid input: {value}. Try again.")
+                valid = False
+
+        if len(valid_preferences) != 7 and valid: #Makes sure the input is the right size
+            print(f"Input size of {len(valid_preferences)}. Needs to be of size 7. Try again.")
+            valid = False
+        if valid:
+            success = True
+
+    primaryFilter = findPrimaryFilter(valid_preferences) + 1 #add one because name is the first index
+    global USER_INPUT
+    USER_INPUT = valid_preferences
+
     for x in range(10):
-        li.append(solve(f, cuisine))
+        li.append(solve(f, cuisine, primaryFilter))
 
     for x in li:
         if x:
