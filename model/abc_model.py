@@ -168,7 +168,11 @@ def f(x):
 
 """ABC algorithm"""
 
-def solve(f, cuisine, primary_filter, num_bees=2, abandonment_limit=5):
+def solve(f, cuisine, primary_filter, num_bees=1, abandonment_limit=5):
+    if num_bees < 2:
+        print(f"ERROR: Number of bees has to be atleast 2!")
+        return -1
+    
     SOLUTION_SPACE = neighbors.generateData(cuisine)
     SOLUTION_SPACE = SOLUTION_SPACE.to_numpy()
     # initialize the bees uniformly in the function space
