@@ -9,7 +9,7 @@ from bee_class import Bee, OnlookerBee, EmployedBee, ScoutBee
 seed = 871623
 np.random.seed(seed)
 
-MAX_ITER = 1000
+MAX_ITER = 100
 
 lower_bound = -2.0
 upper_bound = 2.0
@@ -91,22 +91,7 @@ class neighbors:
                     if current[bee.primaryFilter] <= restaurant2[bee.primaryFilter] <= current[bee.primaryFilter] + \
                             (std * stdCount) or current[bee.primaryFilter] >= restaurant2[bee.primaryFilter] >= \
                             current[bee.primaryFilter] - (std * stdCount): neighborIndex2 = index2
-                # if index1:
-                #     for x in range(1,4):
-                #         if index1+x<len(data) and ( current[-1]-4 <=data[index1+x][-1]<=current[-1]+4):
-                #             neighborIndex1=index1+x
-                #             break
-                #         elif index1-x>0 and ( current[-1]-4 <=data[index1-x][-1]<=current[-1]+4):
-                #             neighborIndex1=index1-x
-                #             break
-                # if index2:
-                #     for x in range(1,4):
-                #         if index2+x<len(data) and ( current[-1]-4 <=data[index2+x][-1]<=current[-1]+4):
-                #             neighborIndex2=index2+x
-                #             break
-                #         elif index2+x>0 and ( current[-1]-4 <=data[index2-x][-1]<=current[-1]+4):
-                #             neighborIndex2=index2-x
-                #             break
+
                 if neighborIndex1 and neighborIndex2:
                     # Passes the index to the fitness function
                     fitness1 = f(restaurant1[1:])
@@ -172,11 +157,6 @@ class neighbors:
         # return the index, and the best restauruant neighbor
         return sortedNeighbors[0][0], sortedNeighbors[0][1]
 
-
-# TODO: This needs to be the same size as x
-COEFFICIENTS = [0.2, 0.2, 0.2, 0.1, 0.1, 0.1, 0.1]
-
-
 # objective function linear combination of all features
 #	Price	Distance	Cleanliness and Hygiene	Locality/Neighborhood	Wait Times	Portion Sizes	Overall Rating
 #Divide the input by 10 so it goes from 0-1
@@ -188,8 +168,7 @@ def f(x):
 
 """ABC algorithm"""
 
-
-def solve(f, cuisine, primary_filter, num_bees=5, abandonment_limit=10):
+def solve(f, cuisine, primary_filter, num_bees=2, abandonment_limit=5):
     SOLUTION_SPACE = neighbors.generateData(cuisine)
     SOLUTION_SPACE = SOLUTION_SPACE.to_numpy()
     # initialize the bees uniformly in the function space
@@ -211,9 +190,10 @@ def solve(f, cuisine, primary_filter, num_bees=5, abandonment_limit=10):
     # fitness of population at initialization
     for bee in population:
         bee.update_fitness()
-
-    best_idx = np.argmax([bee.fitness for bee in population])
-    best_fitness = population[best_idx].fitness
+    
+    local_best_idx = np.argmax([bee.fitness for bee in population])
+    global_best_idx = population[local_best_idx].idx
+    global_best_fitness = population[local_best_idx].fitness
 
     # optimization
     for i in range(MAX_ITER):
@@ -221,11 +201,6 @@ def solve(f, cuisine, primary_filter, num_bees=5, abandonment_limit=10):
         for i, bee in enumerate(population):
             # employ the bee population
             bee.__class__ = EmployedBee
-
-            # idx of random neighboring candidate
-            random_candidate_idx = np.random.randint(0, num_bees)
-            while random_candidate_idx == i:
-                random_candidate_idx = np.random.randint(0, num_bees)
 
             neighbor_index = neighbors.getNeighborFintessBased(bee, SOLUTION_SPACE)
             if neighbor_index:
@@ -249,31 +224,10 @@ def solve(f, cuisine, primary_filter, num_bees=5, abandonment_limit=10):
         prob = [bee.fitness / fitness_sum for bee in population]
 
         # onlooker bees
-        # TODO: Check the logic of this, it should look at the SOLUTION_SPACE not population
-        #       If you look at the continuous implementation, during the Onlooker Phase, a
-        #       new food source needs to be assigned. This method does not seem to do that
-        #       It does not use the neighbor implementation from the bee class so that is not
-        #       the issue here. it always returns a food source that already has a bee
-        #       on it.
         for i, bee in enumerate(population):
             if np.random.uniform() < prob[i]:
                 bee.__class__ = OnlookerBee
                 # generate neighborhood source and test its fitness
-                neighborhood_source = np.random.randint(0, num_bees)
-                while neighborhood_source == i:
-                    neighborhood_source = np.random.randint(0, num_bees)
-
-                # TODO: remove after new implementation working
-                # def euclidean_distance(other):
-                #     other_pos = other.position
-                #     return np.linalg.norm(other_pos[primaryFilter - 1] - bee.position[primaryFilter - 1])
-                #
-                # # sorts the population based on the distance from the current bee.position.
-                # sorted_population = sorted(population, key=euclidean_distance)
-                #
-                # # The first in the population will most likely be the same bee as the current bee so take the second.
-                # neighbor_bee = sorted_population[1] if bee == sorted_population[0] else sorted_population[0]
-
                 # generate a new food source similar to employed but slightly different. if the new food source fitness (rather than the neighbor fitness) is
                 # higher, then we accept new solution, otherwise we increment nonImprovementCounter.
                 potential_index, potential_neighbor = neighbors.getOnlookerNeighbor(bee, SOLUTION_SPACE)
@@ -288,6 +242,7 @@ def solve(f, cuisine, primary_filter, num_bees=5, abandonment_limit=10):
                 # if it isn't in the population create a new bee.
                 if not in_population(potential_neighbor, population):
                     neighbor_bee = Bee(potential_neighbor[1:], f, potential_index, primaryFilter, potential_neighbor[0])
+                    neighbor_bee.update_fitness()
                     new_fitness = neighbor_bee.fitness
                 else:
                     neighbor_bee = None
@@ -303,7 +258,11 @@ def solve(f, cuisine, primary_filter, num_bees=5, abandonment_limit=10):
         for i, bee in enumerate(population):
             if bee.nonImprovementCounter >= abandonment_limit:
                 # TODO: maybe dont abandon strictly based on abandonment limit but have some heuristic based on fitness
-                mask = ~np.all(SOLUTION_SPACE[:, 1:] == bee.position, axis=1)
+                invalid_food_sources = [SOLUTION_SPACE[idx, :] for idx in bee.visitedIndexes] 
+                mask = np.ones(SOLUTION_SPACE.shape[0], dtype=bool)
+                for invalid_source in invalid_food_sources:
+                    mask &= ~np.all(SOLUTION_SPACE[:, :] == invalid_source, axis=1)
+
                 valid_food_sources = SOLUTION_SPACE[mask]
                 new_source_idx = np.random.randint(0, valid_food_sources.shape[0])
                 population[i] = Bee(np.array(SOLUTION_SPACE[new_source_idx][1:]), f, new_source_idx, primaryFilter,
@@ -311,11 +270,12 @@ def solve(f, cuisine, primary_filter, num_bees=5, abandonment_limit=10):
                 population[i].update_fitness()
 
         # update best solutions
-        best_idx = np.argmax([bee.fitness for bee in population])
-        if population[best_idx].fitness > best_fitness:
-            best_fitness = population[best_idx].fitness
+        local_best_idx = np.argmax([bee.fitness for bee in population])
+        if population[local_best_idx].fitness > global_best_fitness:
+            global_best_idx = population[local_best_idx].idx
+            global_best_fitness = population[local_best_idx].fitness
 
-    return population[best_idx].name
+    return SOLUTION_SPACE[global_best_idx, :1]
 
 #Finds the largest rating and returns the index
 def findPrimaryFilter(valid_preferences):

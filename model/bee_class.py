@@ -14,6 +14,7 @@ class Bee():
         self.idx = idx
         self.visitedIndexes = [self.idx]
         self.nonImprovementCounter = 0
+        self.update_fitness()
     
     def update_position(self, new_position):
         self.position = new_position
