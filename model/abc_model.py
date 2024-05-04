@@ -33,8 +33,8 @@ USER_INPUT = []
 
 
 class neighbors:
-    def generateData(cuisine):
-        cuisine = [c.strip().lower() for c in cuisine]
+    def generateData():
+        # cuisine = [c.strip().lower() for c in cuisine]
         # preferences = {}
         # preferences['Price'] = float(input("Enter your preference for Price on a scale of 0-5: "))
         # preferences['Distance'] = float(input("Enter your preference for Distance on a scale of 0-5: "))
@@ -42,12 +42,12 @@ class neighbors:
         # preferences['Locality/Neighborhood']=float(input("Enter your preference for Locality/Neighborhood on a scale of 0-5: "))
         # preferences['Portion Sizes']=float(input("Enter your preference for Portion Sizes on a scale of 0-5: "))
         # preferences['Overall Rating']=float(input("Enter your preference for Overall Rating on a scale of 0-5: "))
-        file_path = '../data/new_restaurants_data.csv'
+        file_path = 'data/new_restaurants_data.csv'
         df = pd.read_csv(file_path)
-        df['Cuisine'] = df['Cuisine'].str.lower().str.strip()
-        filtered_df = df[df['Cuisine'].isin(cuisine)]
+        # df['Cuisine'] = df['Cuisine'].str.lower().str.strip()
+        # filtered_df = df[df['Cuisine'].isin(cuisine)]
         # print(filtered_df)
-        filtered_df = filtered_df.drop(columns=['Cuisine'])
+        filtered_df = df.drop(columns=['Cuisine'])
         return filtered_df
 
     '''
@@ -168,12 +168,12 @@ def f(x):
 
 """ABC algorithm"""
 
-def solve(f, cuisine, primary_filter, num_bees=1, abandonment_limit=5):
+def solve(f, primary_filter, num_bees=50, abandonment_limit=5):
     if num_bees < 2:
         print(f"ERROR: Number of bees has to be atleast 2!")
         return -1
     
-    SOLUTION_SPACE = neighbors.generateData(cuisine)
+    SOLUTION_SPACE = neighbors.generateData()
     SOLUTION_SPACE = SOLUTION_SPACE.to_numpy()
     # initialize the bees uniformly in the function space
     population = []
@@ -294,7 +294,7 @@ def findPrimaryFilter(valid_preferences):
 # print(solve(f))
 def main():
     li = []
-    cuisine = input("Enter preferred cuisines separated by comma (e.g., Indian,Chinese): ").split(',')
+    # cuisine = input("Enter preferred cuisines separated by comma (e.g., Indian,Chinese): ").split(',')
 
     valid_preferences = []
     success = False
@@ -330,7 +330,7 @@ def main():
     USER_INPUT = valid_preferences
 
     for x in range(10):
-        li.append(solve(f, cuisine, primaryFilter))
+        li.append(solve(f, primaryFilter))
 
     for x in li:
         if x:
