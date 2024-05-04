@@ -1,6 +1,7 @@
 import numpy as np
 from bee_class import Bee, OnlookerBee, EmployedBee, ScoutBee
 import pdb
+import math
 
 seed = 871623
 np.random.seed(seed)
@@ -15,6 +16,24 @@ D = 2
 def f(x): 
     return np.sum(100.0*(x[1:]-x[:-1]**2.0)**2.0 + (1-x[:-1])**2.0)
 
+def ackley(x): # returns a scalar
+    """
+    The objective function.
+    Implements the Ackley algorithm.
+    :param x: The 1xD array to calculate with.
+    :return: The cost of the point x.
+    """
+    sum = 0
+    leftSum = 0
+    rightSum = 0
+    for i in range(D):
+        leftSum += pow(x[i], 2)
+        rightSum += math.cos(2 * math.pi * x[i])
+
+    sum += -20 * math.exp(-0.02 * math.sqrt((1/D) * leftSum)) - math.exp((1/D) * rightSum) + 20 + math.e
+
+    return sum
+
 def eggcrate(x):  # returns a scalar
     """
     The objective function.
@@ -22,19 +41,19 @@ def eggcrate(x):  # returns a scalar
     :param x: The 1xD array to calculate with.
     :return: The cost of the point x.
     """
-    x = x[0]
     return pow(x[0], 2) + pow(x[1], 2) + 25 * (pow(math.sin(x[0]), 2) + pow(math.sin(x[1]), 2))
 
-def fourPeaks(x):  # returns a scalar
+def alpine(x):
     """
     The objective function.
-    Implements the Four Peaks Function .
+    Implements the Alpine algorithm.
     :param x: The 1xD array to calculate with.
     :return: The cost of the point x.
     """
-    x = x[0]
-    return math.exp(-pow((x[0] - 4), 2) - pow((x[1] - 4), 2)) + math.exp(-pow((x[0] + 4), 2) - pow((x[1] - 4), 2)) + \
-        2 * (math.exp(-pow(x[0], 2) - pow(x[1], 2)) + math.exp(-pow(x[0], 2) - pow((x[1] + 4), 2)))
+    sum = 0
+    for i in x:
+        sum += abs(i*np.sin(i) + .1*i)
+    return -sum
 
 def easom(x): # returns a scalar
     """
@@ -147,14 +166,14 @@ def solve_Init(obj_func, pop_size, number_of_trials, abandoment_limit):
     sample_std_dev = np.std(best_fitnesses, ddof=1)
     return mean, sample_std_dev
 
-population_sizes = [100, 50, 30, 10]
+population_sizes = [100, 30]
 number_of_trials = 30
-abandoment_limits = [50, 25, 10, 5, 1, 0.1]
+abandoment_limits = [50, 10]
 
 with open('../continousOutput.txt', 'w') as file:
     for i in range(len(population_sizes)):
         for j in range(len(abandoment_limits)):
-            mean, std = solve_Init(rosenbrock, population_sizes[i], number_of_trials, abandoment_limits[j])
+            mean, std = solve_Init(ackley, population_sizes[i], number_of_trials, abandoment_limits[j])
             file.write("Population Size: " + str(population_sizes[i]) + '\n')
             print("Population Size: ", population_sizes[i])
             file.write("Abandoment Limit: " + str(abandoment_limits[j]) + '\n')
