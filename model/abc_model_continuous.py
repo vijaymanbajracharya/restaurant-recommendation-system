@@ -43,18 +43,6 @@ def eggcrate(x):  # returns a scalar
     """
     return pow(x[0], 2) + pow(x[1], 2) + 25 * (pow(math.sin(x[0]), 2) + pow(math.sin(x[1]), 2))
 
-def alpine(x):
-    """
-    The objective function.
-    Implements the Alpine algorithm.
-    :param x: The 1xD array to calculate with.
-    :return: The cost of the point x.
-    """
-    sum = 0
-    for i in x:
-        sum += abs(i*np.sin(i) + .1*i)
-    return -sum
-
 def easom(x): # returns a scalar
     """
     The objective function.
