@@ -1,6 +1,5 @@
 import numpy as np
 
-# TODO: import these values from data file
 lower_bound = -2.0
 upper_bound = 2.0
 

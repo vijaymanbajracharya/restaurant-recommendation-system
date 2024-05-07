@@ -21,9 +21,19 @@ Install dependencies
 python -m pip install -r requirements.txt
 ```
 
-## Error: Running Scripts is Disabled on this system
-Fix:
+## Running the program
+
+### To run the restaurant recommendation system
+From the root directory, run the following command:
 ```
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+python ./model/abc_model.py ./data/new_restaurants_data.csv
+``` 
+
+Then enter your food preferences (eg. = 3,1,1,1,1,1,1) in the command prompt
+
+### To run the standard ABC alogithm on 4 benchmark functions
+From the root directory, run the following command:
 ```
+python ./model/abc_model_continuous.py
+``` 
 

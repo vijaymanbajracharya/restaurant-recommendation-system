@@ -1,0 +1,21 @@
+Restaurant Name,Price,Cuisine,Distance,Cleanliness and Hygiene,Locality/Neighborhood,Wait Times,Portion Sizes,Overall Rating
+res1,100,Indian,1,1,1,1,1,1
+res2,1,Indian,100,1,1,1,1,1
+res3,1,Indian,1,100,1,1,1,1
+res4,1,Indian,1,1,100,1,1,1
+res5,1,Indian,1,1,1,100,1,1
+res6,1,Indian,1,1,1,1,100,1
+res7,1,Indian,1,1,1,1,1,100
+res8,80,Indian,50,50,50,50,50,50
+res9,50,Indian,80,50,50,50,50,50
+res10,50,Indian,50,50,50,50,50,50
+res11,100,Indian,100,1,1,1,1,1
+res12,87,Indian,78,45,23,23,12,5
+res13,5,Indian,87,78,45,23,23,12
+res14,12,Indian,5,87,78,45,23,23
+res15,23,Indian,12,5,87,78,45,23
+res16,23,Indian,23,12,5,87,78,45
+res17,45,Indian,23,23,12,5,87,78
+res18,78,Indian,45,23,23,12,5,87
+res19,23,Indian,23,23,23,23,23,23
+res20,100,Indian,100,2,2,2,2,100

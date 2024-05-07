@@ -2,10 +2,10 @@
 
 import pandas as pd
 
-def load('path_to_your_csv.csv',cuisine):
+def load(path,cuisine):
     #having a path as a parameter allows us to play with files of different sizes
     # Load the CSV file into a DataFrame
-    df = pd.read_csv()
+    df = pd.read_csv(path)
     
     # Assume you want to select rows where the cuisine is 'Italian', can be anything a user wants, and there can be multiple cuisines too
     # selected_cuisine = 'Italian'

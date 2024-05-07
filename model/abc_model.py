@@ -1,8 +1,7 @@
 import numpy as np
-import math
 import random
 import pandas as pd
-import pdb
+import sys
 from bee_class import Bee, OnlookerBee, EmployedBee, ScoutBee
 
 # ARGS
@@ -33,20 +32,8 @@ USER_INPUT = []
 
 
 class neighbors:
-    def generateData():
-        # cuisine = [c.strip().lower() for c in cuisine]
-        # preferences = {}
-        # preferences['Price'] = float(input("Enter your preference for Price on a scale of 0-5: "))
-        # preferences['Distance'] = float(input("Enter your preference for Distance on a scale of 0-5: "))
-        # preferences['Cleanliness and Hygiene']=float(input("Enter your preference for Cleanliness and Hygiene on a scale of 0-5: "))
-        # preferences['Locality/Neighborhood']=float(input("Enter your preference for Locality/Neighborhood on a scale of 0-5: "))
-        # preferences['Portion Sizes']=float(input("Enter your preference for Portion Sizes on a scale of 0-5: "))
-        # preferences['Overall Rating']=float(input("Enter your preference for Overall Rating on a scale of 0-5: "))
-        file_path = 'data/new_restaurants_data.csv'
-        df = pd.read_csv(file_path)
-        # df['Cuisine'] = df['Cuisine'].str.lower().str.strip()
-        # filtered_df = df[df['Cuisine'].isin(cuisine)]
-        # print(filtered_df)
+    def generateData(dataset_path):
+        df = pd.read_csv(dataset_path)
         filtered_df = df.drop(columns=['Cuisine'])
         return filtered_df
 
@@ -107,7 +94,7 @@ class neighbors:
 
         return neighbor if neighbor else None
 
-    # TEMPORARY NEIGHBOR IMPLEMENTATION
+    # Euclidean Neighbor 
     def getNeighborEuclidean(bee, data):
         data = [np.array(lst[1:], dtype=int) for lst in data]
         target = bee.position
@@ -168,12 +155,12 @@ def f(x):
 
 """ABC algorithm"""
 
-def solve(f, primary_filter, num_bees=50, abandonment_limit=5):
+def solve(f, primary_filter, dataset_path, num_bees=2, abandonment_limit=5):
     if num_bees < 2:
         print(f"ERROR: Number of bees has to be atleast 2!")
         return -1
     
-    SOLUTION_SPACE = neighbors.generateData()
+    SOLUTION_SPACE = neighbors.generateData(dataset_path)
     SOLUTION_SPACE = SOLUTION_SPACE.to_numpy()
     # initialize the bees uniformly in the function space
     population = []
@@ -292,7 +279,7 @@ def findPrimaryFilter(valid_preferences):
     return max_index
 
 # print(solve(f))
-def main():
+def recommendRestaurants(dataset_path):
     li = []
     # cuisine = input("Enter preferred cuisines separated by comma (e.g., Indian,Chinese): ").split(',')
 
@@ -302,7 +289,7 @@ def main():
         print("Choose your preferences on a scale from 1-10 (inclusive).")
         print(
             "The order of your preferences are: Price	Distance	Cleanliness and Hygiene	Locality/Neighborhood	Wait Times	Portion Sizes	Overall Rating")
-        preferences = input("Enter a comma seperated list of 7 values: ").split(',')
+        preferences = input("Enter a comma seperated list of 7 values (eg. 1,1,1,1,1,1,1): ").split(',')
         valid = True
         valid_preferences = []
         for value in preferences:
@@ -330,11 +317,19 @@ def main():
     USER_INPUT = valid_preferences
 
     for x in range(10):
-        li.append(solve(f, primaryFilter))
+        restaurant = solve(f, primaryFilter, dataset_path)
+        if restaurant not in li:
+            li.append(restaurant)
 
+    print("\nHere are a list of restaurants that fit your preferences:\n")
     for x in li:
         if x:
             print(x)
 
 
-main()
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("Please provide the path for the restaurant dataset!")
+        sys.exit(1)
+
+    recommendRestaurants(sys.argv[1])

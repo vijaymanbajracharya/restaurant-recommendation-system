@@ -127,9 +127,6 @@ def solve(f, num_bees = 50, abandonment_limit=25):
                     bee.nonImprovementCounter += 1
 
         # scout bees
-        # TODO: incorporate abandonment criteria, right now random sources are abandoned based on a small probability
-        # instead, it should track the number of times this source has failed to yield a positive outcome and then 
-        # abandon the source if the number of attempts is too large (hyper param)
         for i, bee in enumerate(population):
             if bee.nonImprovementCounter >= abandonment_limit:
                 bee.__class__ = ScoutBee
@@ -170,7 +167,3 @@ with open('../continousOutput.txt', 'w') as file:
             print("Mean: ", mean)
             file.write("Standard Deviation: " + str(std) + '\n\n')
             print("Standard Deviation: ", std)
-
-
-# print(solve(f))
-
