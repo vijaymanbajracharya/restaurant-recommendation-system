@@ -1,5 +1,6 @@
 # Restaurant Recommendation System
 This is a recommendation model for restaurants using the Artificial Bee Colony (ABC) algorithm.
+To view project detials open the Restaurant Recomendation System Using the ABC Algorithm pdf.
 
 ## Building the project
 Create a local virtual environment
